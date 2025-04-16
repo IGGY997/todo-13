@@ -1,35 +1,73 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// src/App.jsx
+import { useState, useEffect } from "react";
+import "./App.css";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [tasks, setTasks] = useState([]);
+  const [input, setInput] = useState("");
+
+  // Load tasks from localStorage on mount
+  useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem("tasks"));
+    if (stored) setTasks(stored);
+  }, []);
+
+  // Save tasks to localStorage whenever tasks change
+  useEffect(() => {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }, [tasks]);
+
+  // Add a new task
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+    const newTask = {
+      id: Date.now(),
+      text: input,
+      completed: false,
+    };
+    setTasks([newTask, ...tasks]);
+    setInput("");
+  };
+
+  // Toggle completed
+  const toggleComplete = (id) => {
+    setTasks(tasks.map(task =>
+      task.id === id ? { ...task, completed: !task.completed } : task
+    ));
+  };
+
+  // Delete a task
+  const deleteTask = (id) => {
+    setTasks(tasks.filter(task => task.id !== id));
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="app">
+      <h1>Ignatius' Todo List</h1>
+      <form onSubmit={handleSubmit}>
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Add a task"
+        />
+        <button type="submit">Add</button>
+      </form>
+
+      <ul>
+        {tasks.length === 0 && <p>No tasks yet ✨</p>}
+        {tasks.map((task) => (
+          <li key={task.id} style={{ textDecoration: task.completed ? "line-through" : "none" }}>
+            {task.text}
+            <div className="buttons">
+              <button onClick={() => toggleComplete(task.id)}>✔️</button>
+              <button onClick={() => deleteTask(task.id)}>🗑️</button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
-export default App
+export default App;
